@@ -1,0 +1,39 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: fitclub
+      POSTGRES_PASSWORD: fitclub_pass
+      POSTGRES_DB: fitclub
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fitclub"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    # contexto = raíz del proyecto para que la imagen incluya api/ Y web/
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+    environment:
+      DATABASE_URL: postgresql://fitclub:fitclub_pass@db:5432/fitclub
+      SECRET_KEY: ${SECRET_KEY:-cambieme-en-produccion}
+      # para seed.py (backfill del export de Fitbit)
+      CLUB_EMAIL: ${CLUB_EMAIL:-renzo@fitclub.local}
+      CLUB_PASSWORD: ${CLUB_PASSWORD:-renzo1234}
+      CLUB_NAME: ${CLUB_NAME:-Renzo}
+      TAKEOUT_DIR: ${TAKEOUT_DIR:-/data/Google Health}
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    # Opcional: montá el export de Fitbit para el seed (ajustá la ruta):
+    # volumes:
+    #   - C:/Users/R/Desktop/Plan_10K/data-fitbit:/data:ro
+
+volumes:
+  pgdata:
