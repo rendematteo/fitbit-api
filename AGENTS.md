@@ -19,6 +19,22 @@ Pipeline que baja datos de salud de **Google Health API** (ex-Fitbit) y genera
 
 ---
 
+## 🧩 Skill del proyecto (para agentes OpenCode)
+
+Este repo trae una **skill genérica** en `.opencode/skills/fitbit-health/SKILL.md`
+con el runbook completo: setup OAuth, auth, sync, reportes y troubleshooting.
+
+Si sos un agente OpenCode, **cargala** con el tool `skill`:
+
+```json
+{ "id": "fitbit-health" }
+```
+
+Si tu agente no soporta skills, **leé ese archivo directamente** — es la guía más
+actualizada y genérica (sirve para cualquier persona, sin paths hardcodeados).
+
+---
+
 ## 🔐 Reglas (OBLIGATORIAS)
 
 1. **Secretos**: siempre en `.secrets/` (que está en `../.secrets/`, hermano del proyecto). NUNCA en la carpeta del proyecto.
