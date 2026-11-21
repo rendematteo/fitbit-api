@@ -200,44 +200,40 @@ def main():
         "upcoming": ("·", "próximo"),
     }
 
-    semanas_html = ""
-    for semana, ses in semanas.items():
-        fase = ses[0]["fase"]
-        dias_html = ""
-        for s in ses:
-            icono, lbl_status = STATUS[s["status"]]
-            actual = s["actual"]
-            real_bits = []
-            if actual.get("steps") is not None:
-                real_bits.append(f"{actual['steps']:,.0f} pasos")
-            if actual.get("km") is not None:
-                real_bits.append(f"{actual['km']:.2f} km")
-            if actual.get("kcal") is not None:
-                real_bits.append(f"{actual['kcal']:,.0f} kcal")
-            if actual.get("hr_avg") is not None:
-                real_bits.append(f"FC {actual['hr_avg']:.0f}")
-            real = " · ".join(real_bits) if real_bits else "—"
+    def card_html(s):
+        icono, lbl_status = STATUS[s["status"]]
+        actual = s["actual"]
+        real_bits = []
+        if actual.get("steps") is not None:
+            real_bits.append(f"{actual['steps']:,.0f} pasos")
+        if actual.get("km") is not None:
+            real_bits.append(f"{actual['km']:.2f} km")
+        if actual.get("kcal") is not None:
+            real_bits.append(f"{actual['kcal']:,.0f} kcal")
+        if actual.get("hr_avg") is not None:
+            real_bits.append(f"FC {actual['hr_avg']:.0f}")
+        real = " · ".join(real_bits) if real_bits else "—"
 
-            sessions_html = ""
-            for e in s["sessions"]:
-                pace = ""
-                if e["pace"] and e["pace"] > 0:
-                    m = int(e["pace"] * 1000 / 60)
-                    sec = int(round((e["pace"] * 1000 / 60 - m) * 60))
-                    pace = f" · {m}:{sec:02d}/km"
-                sessions_html += (
-                    f'<div class="sess"><span class="sess-t">{e["hora"]:%H:%M} {esc(e["tipo"])}</span>'
-                    f'<span class="sess-v">{e["km"]:.2f} km · {e["kcal"]:.0f} kcal'
-                    f'{" · " + str(int(e["hr"])) + " bpm" if e["hr"] else ""}{pace}</span></div>'
-                )
+        sessions_html = ""
+        for e in s["sessions"]:
+            pace = ""
+            if e["pace"] and e["pace"] > 0:
+                m = int(e["pace"] * 1000 / 60)
+                sec = int(round((e["pace"] * 1000 / 60 - m) * 60))
+                pace = f" · {m}:{sec:02d}/km"
+            sessions_html += (
+                f'<div class="sess"><span class="sess-t">{e["hora"]:%H:%M} {esc(e["tipo"])}</span>'
+                f'<span class="sess-v">{e["km"]:.2f} km · {e["kcal"]:.0f} kcal'
+                f'{" · " + str(int(e["hr"])) + " bpm" if e["hr"] else ""}{pace}</span></div>'
+            )
 
-            plan_txt = s["sesion"]
-            if s["duracion"]:
-                plan_txt += f" · {s['duracion']}"
-            if s["zona"]:
-                plan_txt += f" · {s['zona']}"
+        plan_txt = s["sesion"]
+        if s["duracion"]:
+            plan_txt += f" · {s['duracion']}"
+        if s["zona"]:
+            plan_txt += f" · {s['zona']}"
 
-            dias_html += f"""
+        return f"""
 <div class="pday {s['status']}">
   <div class="pday-head">
     <span class="pday-fecha">{s['dia']}</span>
@@ -247,6 +243,28 @@ def main():
   <div class="pday-real">{esc(real)}</div>
   {sessions_html}
 </div>"""
+
+    # --- HOY pineado arriba (la fecha más cercana primero) ---
+    hoy_sessions = [s for s in sesiones if s["status"] == "today"]
+    hoy_html = ""
+    if hoy_sessions:
+        hoy_html = ('<div class="semana hoy"><h2>Hoy</h2>'
+                    + "".join(card_html(s) for s in hoy_sessions)
+                    + '</div>')
+
+    # --- semanas: la más reciente arriba ---
+    semanas_html = ""
+    for semana, ses in sorted(semanas.items(),
+                              key=lambda kv: max(x["fecha"] for x in kv[1]),
+                              reverse=True):
+        fase = ses[0]["fase"]
+        dias_html = "".join(
+            card_html(s)
+            for s in sorted(ses, key=lambda x: x["fecha"], reverse=True)
+            if s["status"] != "today"
+        )
+        if not dias_html.strip():
+            continue
         semanas_html += f"""
 <div class="semana">
   <h2>{semana} <span class="fase">{fase}</span></h2>
@@ -255,7 +273,7 @@ def main():
 
     # --- sección: actividad reciente ---
     reciente_html = '<div class="recent"><h2>Tu actividad reciente</h2>'
-    for offset in range(6, -1, -1):
+    for offset in range(0, 7):
         key = (hoy - timedelta(days=offset)).isoformat()
         d = reciente.get(key, {})
         fecha = hoy - timedelta(days=offset)
@@ -306,6 +324,7 @@ h1 .accent {{ color: #E85D3D; }}
 .semana h2 {{ font-size: 13px; font-weight: 700; color: #1C1B1A;
               text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }}
 .semana h2 .fase {{ color: #B0ABA3; font-weight: 500; margin-left: 6px; }}
+.semana.hoy h2 {{ color: #6366F1; }}
 .pday {{ background: #fff; border-radius: 16px; padding: 14px 18px;
          margin-bottom: 10px; border: 1px solid #F0EDE8;
          box-shadow: 0 1px 2px rgba(28,27,26,.03); }}
@@ -336,6 +355,7 @@ footer {{ text-align: center; color: #C9C4BC; font-size: 12px; margin-top: 40px;
     <div class="header-line"></div>
   </header>
   {reciente_html}
+  {hoy_html}
   {semanas_html}
   <footer>FitClub · python scripts/plan_vs_real.py</footer>
 </div>

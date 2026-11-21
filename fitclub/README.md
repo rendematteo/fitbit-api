@@ -71,8 +71,8 @@ una VPS con Docker). Cada amigo:
 
 ## 5. Sincronización diaria automática (opcional)
 
-El script `fitbit_daily_sync.py` ya refresca el token de Fitbit; para que
-cargue **acá** en vez de BigQuery, reemplazá `load(rows)` por:
+El script `legacy/fitbit_daily_sync.py` ya refresca el token de Fitbit (hoy
+deprecado); para que cargue **acá** en vez de BigQuery, reemplazá `load(rows)` por:
 
 ```python
 import os

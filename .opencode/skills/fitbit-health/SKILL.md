@@ -30,6 +30,20 @@ python --version          # 3.12+
 pip install -r requirements.txt
 ```
 
+## ⚡ Atajos (`run.ps1` / `run.cmd`)
+
+```powershell
+.\run auth     # re-autorizar (token 7 días)
+.\run test     # validar credencial + API
+.\run sync     # bajar datos (sin heart-rate)
+.\run report   # generar los 4 HTML
+.\run all      # sync + report
+```
+
+Args extra: `.\run sync --since 2026-10-01`
+
+> Si Windows bloquea el `.ps1` (ExecutionPolicy), usá `.\run.cmd` — mismo comando.
+
 ## Paso 1 — OAuth (una sola vez por persona)
 
 Cada persona usa **su propio** proyecto de Google Cloud:
@@ -107,7 +121,9 @@ python scripts/check_and_download.py --test   # 1 llamada: valida credencial + A
 
 - `src/api.py` — cliente REST (auth, `daily_rollup`, `list_daily`).
 - `src/paths.py` — rutas (`SECRETS_DIR`, `DATA_DIR`, `WEB_DIR`, `PLAN_CSV`).
-- `scripts/` — ejecutables.
+- `scripts/` — flujo actual (auth, sync, reportes).
+- `legacy/` — scripts viejos (Fitbit Web API, gRPC) — NO usar.
+- `run.ps1` — atajos (auth/sync/report/all/test).
 - `data/` — datos (gitignored).
 - `web/` — HTML generado (gitignored).
 - `../.secrets/` — credenciales (gitignored, fuera del repo).

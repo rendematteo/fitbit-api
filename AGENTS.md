@@ -84,7 +84,7 @@ La persona necesita su **propio** cliente OAuth de Google Cloud:
 
 ### Paso 4 — Autorizar (una sola vez)
 ```powershell
-python scripts/authorize_google_health.py
+.\run auth            # o: python scripts/authorize_google_health.py
 ```
 - Se abre el navegador → iniciar sesión con la cuenta Google → **Allow**
 - Se genera `token.json` en `.secrets/`
@@ -93,6 +93,8 @@ python scripts/authorize_google_health.py
 
 ### Paso 5 — Ver los datos
 ```powershell
+.\run report          # genera los 4 HTML de una
+# o individual:
 python scripts/panel.py           # panel minimalista interactivo
 python scripts/plan_vs_real.py    # plan de entrenamiento vs datos reales
 python scripts/reporte_2_dias.py # resumen de últimos 2 días
@@ -101,7 +103,7 @@ python scripts/make_dashboard.py  # dashboard completo
 
 ### Paso 6 — Sync incremental (todos los datos)
 ```powershell
-python scripts/check_and_download.py   # baja solo lo nuevo
+.\run sync            # o: python scripts/check_and_download.py
 ```
 
 > `heart-rate` (muestras crudas de 1 s, ~160 MB) **se saltea por defecto**. Los
@@ -115,16 +117,32 @@ python scripts/check_and_download.py   # baja solo lo nuevo
 ```
 fitbit-personal/
 ├── src/               → código compartido (api.py, helpers.py, paths.py)
-├── scripts/           → scripts ejecutables
+├── scripts/           → flujo actual (auth, sync, reportes)
+├── legacy/            → scripts viejos (Fitbit Web API, gRPC) — NO usar
 ├── data/              → datos (GITIGNORED)
 ├── web/               → HTML generado (GITIGNORED)
 ├── docs/              → documentación
-├── fitclub/           → app Docker + ranking
+├── fitclub/           → 🧪 experimental: ranking con amigos (Docker)
+├── run.ps1            → atajos (auth/sync/report/all/test)
 ├── README.md          → punto de entrada
 ├── AGENTS.md          → este archivo
 ├── .gitignore         → protege secretos y datos
 └── requirements.txt   → dependencias
 ```
+
+## 🧰 Comandos rápidos (`run.ps1` / `run.cmd`)
+
+```powershell
+.\run auth     # re-autorizar (token 7 días)
+.\run test     # validar credencial + API
+.\run sync     # bajar datos (sin heart-rate)
+.\run report   # generar los 4 HTML
+.\run all      # sync + report
+```
+
+Args extra: `.\run sync --since 2026-10-01`
+
+> Si Windows bloquea el `.ps1` (ExecutionPolicy), usá `.\run.cmd` — mismo comando.
 
 ---
 
