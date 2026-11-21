@@ -7,6 +7,23 @@
 
 ---
 
+## 👋 ¿Sos Sonico o Cotis? (o cualquiera que quiere sus datos)
+
+1. **Abrí una terminal en el repo** y pedile a tu agente IA:
+   > *"Leé AGENTS.md y guiame para bajar mis datos de Google Health"*
+2. El agente te guía para:
+   - Instalar Python + dependencias
+   - Crear **tu propio** `client_secret.json` (OAuth Desktop, ~5 min)
+   - Autorizar (`authorize_google_health.py`)
+   - Bajar tus datos (`check_and_download.py`)
+   - Generar tus dashboards (`panel.py`, `plan_vs_real.py`)
+3. **Tus datos y credenciales nunca salen de tu máquina** (`.gitignore` los protege).
+
+> 🔐 Cada persona usa su **propio** proyecto de Google Cloud y su **propia**
+> carpeta `.secrets/`. No se comparten credenciales.
+
+---
+
 ## 📁 Estructura (estilo repo)
 
 ```
@@ -89,7 +106,13 @@ pip install -r requirements.txt
 cd "C:\Users\R\Desktop\projects\fitbit-personal"
 python scripts/authorize_google_health.py
 ```
-Se abre el navegador → Allow → se genera `token.json` en `.secrets/`. **Nunca más login.**
+Se abre el navegador → Allow → se genera `token.json` en `.secrets/`.
+
+> ⚠️ **El token dura 7 días** si el OAuth consent screen está en modo **Testing**
+> (Google invalida el refresh token). Cuando aparezca `invalid_grant`, volvé a
+> correr `authorize_google_health.py`. Para que no expire: OAuth consent screen
+> → **Publish app** (con scopes restringidos puede pedir verificación; para uso
+> personal alcanza con re-autorizar cada 7 días).
 
 ### 2. Ver tus datos
 ```powershell
@@ -103,6 +126,10 @@ python scripts/make_dashboard.py  # dashboard completo
 ```powershell
 python scripts/check_and_download.py   # baja solo lo nuevo (estado + merge)
 ```
+
+> `heart-rate` (muestras crudas de 1 segundo, ~160 MB) **se saltea por defecto**
+> porque los reportes usan el acumulado diario (`dailyRollUp`). Si lo querés igual:
+> `python scripts/check_and_download.py --with-heart-rate`
 
 ---
 
@@ -124,7 +151,8 @@ web/*.html  (web estática, sin servidor)
 
 - **Zona horaria:** `America/Argentina/Buenos_Aires` (ART, UTC-3)
 - **Fitbit Web API se apaga el 30/10/2026** — después solo Google Health API
-- `heart-rate.json` (292 MB) son muestras de 1 segundo — no hacen falta para los
-  reportes (usar dailyRollUp). Se puede borrar.
+- `heart-rate.json` (~160 MB) son muestras crudas de 1 segundo — **no hacen falta**
+  para los reportes (usan `dailyRollUp`). El sync lo **saltea por defecto**; si ya
+  lo tenés, se puede borrar.
 - Las credenciales (`client_secret.json`, `token.json`) viven en `.secrets/` y
   **nunca se comparten ni se commitean** (ver `AGENTS.md`).

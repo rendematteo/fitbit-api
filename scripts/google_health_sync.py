@@ -67,7 +67,7 @@ from google.devicesandservices.health.v4 import data_points_pb2_grpc
 
 # ---------- Configuración ----------
 GRPC_ENDPOINT = "health.googleapis.com:443"
-SECRETS = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".secrets")
+SECRETS = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), ".secrets")  # hermano: projects/.secrets
 TOKEN_FILE = os.environ.get("HEALTH_TOKEN_FILE", os.path.join(SECRETS, "token.json"))
 TZ_NAME = os.environ.get("HEALTH_TZ", "America/Argentina/Buenos_Aires")
 BACKFILL_START = os.environ.get("HEALTH_BACKFILL_START", "2026-06-01")

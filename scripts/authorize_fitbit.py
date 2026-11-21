@@ -34,7 +34,7 @@ REDIRECT_URI = "http://localhost:8080/callback"
 SCOPES = "activity heartrate sleep profile weight"
 AUTH_URL = "https://www.fitbit.com/oauth2/authorize"
 TOKEN_URL = "https://api.fitbit.com/oauth2/token"
-SECRETS = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".secrets")
+SECRETS = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), ".secrets")  # hermano: projects/.secrets
 OUT = os.environ.get("FITBIT_TOKENS_FILE", os.path.join(SECRETS, "fitbit_tokens.json"))
 
 
@@ -48,7 +48,7 @@ class CallbackHandler(BaseHTTPRequestHandler):
         self.send_header("Content-Type", "text/html; charset=utf-8")
         self.end_headers()
         self.wfile.write(
-            b"<h2>✅ Autorizacion OK — ya podes cerrar esta pestanya</h2>"
+            "<h2>✅ Autorizacion OK — ya podes cerrar esta pestanya</h2>".encode("utf-8")
         )
         threading.Thread(target=self.server.shutdown, daemon=True).start()
 

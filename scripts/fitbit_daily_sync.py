@@ -55,7 +55,7 @@ PAGE_LIMIT = 50
 # Modos de ejecución (sin GCP = 100% Python local):
 #   FITBIT_TOKENS_FILE : tokens en archivo local (ej. fitbit_tokens.json)
 #   FITBIT_LOCAL_LOG   : actividades a JSONL append-only (ej. actividades.jsonl)
-SECRETS = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".secrets")
+SECRETS = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), ".secrets")  # hermano: projects/.secrets
 TOKENS_FILE = os.environ.get("FITBIT_TOKENS_FILE", os.path.join(SECRETS, "fitbit_tokens.json"))
 LOCAL_LOG = os.environ.get("FITBIT_LOCAL_LOG")
 

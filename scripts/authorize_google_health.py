@@ -46,17 +46,26 @@ Mientras tanto, la Fitbit Web API (fitbit_daily_sync.py) sigue
 funcionando hasta el 30/10/2026.
 """
 import os
+import sys
+import time
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+except Exception:
+    pass
 
 from google_auth_oauthlib.flow import InstalledAppFlow
+from src.paths import SECRETS_DIR
 
 SCOPES = [
     "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly",
     "https://www.googleapis.com/auth/googlehealth.sleep.readonly",
     "https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly",
 ]
-SECRETS = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".secrets")
-CLIENT_SECRETS_FILE = os.environ.get("CLIENT_SECRETS_FILE", os.path.join(SECRETS, "client_secret.json"))
-TOKEN_FILE = os.environ.get("HEALTH_TOKEN_FILE", os.path.join(SECRETS, "token.json"))
+CLIENT_SECRETS_FILE = os.environ.get("CLIENT_SECRETS_FILE", os.path.join(SECRETS_DIR, "client_secret.json"))
+TOKEN_FILE = os.environ.get("HEALTH_TOKEN_FILE", os.path.join(SECRETS_DIR, "token.json"))
 
 
 def main():
@@ -75,8 +84,20 @@ def main():
     # run_local_server: abre el navegador y levanta un server en localhost
     creds = flow.run_local_server(port=0)
 
-    with open(TOKEN_FILE, "w", encoding="utf-8") as f:
-        f.write(creds.to_json())
+    data = creds.to_json()
+    # Escritura atómica: escribe a .tmp y reemplaza. Evita el PermissionError
+    # al truncar token.json si otro proceso lo tiene memory-mapped.
+    tmp = TOKEN_FILE + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        f.write(data)
+    for intento in range(5):
+        try:
+            os.replace(tmp, TOKEN_FILE)
+            break
+        except PermissionError:
+            if intento == 4:
+                raise
+            time.sleep(0.6)
 
     print(f"✅ Token guardado en {TOKEN_FILE}")
     print("   Incluye refresh token: se renueva automáticamente.")

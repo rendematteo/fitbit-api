@@ -47,6 +47,11 @@ DATA_TYPES = [
     "daily-vo2-max", "weight", "steps", "distance", "total-calories",
 ]
 
+# heart-rate son muestras crudas de 1 segundo (~160 MB) y NO se usan en los
+# reportes (esos usan dailyRollUp). Se saltea por defecto; incluilo con
+# --with-heart-rate o pidiéndolo explícitamente con --only heart-rate.
+DEFAULT_SKIP = ["heart-rate"]
+
 FILTERS = {
     "exercise": 'exercise.interval.civil_start_time >= "{since}"',
     "sleep": 'sleep.interval.civil_end_time >= "{since}"',
@@ -148,12 +153,16 @@ def test_api(creds):
     return ok
 
 
-def download(creds, out_dir, since, only=None, full=False):
+def download(creds, out_dir, since, only=None, full=False, skip=None):
     os.makedirs(out_dir, exist_ok=True)
     print(f"\n⬇️  Bajando a: {out_dir}\n")
     state = load_state()
     resumen = {}
-    for dt in (only or DATA_TYPES):
+    skip = set(skip or [])
+    tipos = [t for t in (only or DATA_TYPES) if t not in skip]
+    if skip:
+        print(f"  ⏭️  Salteando: {', '.join(sorted(skip))}")
+    for dt in tipos:
         page_size = 25 if dt in ("exercise", "sleep") else 10000
         params = {"pageSize": page_size}
 
@@ -223,9 +232,19 @@ def main():
     ap.add_argument("--reauth", action="store_true", help="re-autorizar aunque haya token")
     ap.add_argument("--since", help="bajar solo desde YYYY-MM-DD")
     ap.add_argument("--only", nargs="+", help="bajar solo estos data types")
+    ap.add_argument("--skip", nargs="+", help="data types a saltear (default: heart-rate)")
+    ap.add_argument("--with-heart-rate", action="store_true", help="incluir heart-rate (~160 MB de muestras de 1 s)")
     ap.add_argument("--full", action="store_true", help="bajar TODO el historial")
     ap.add_argument("--out", default=None, help="carpeta de descarga")
     args = ap.parse_args()
+
+    # heart-rate (muestras crudas de 1 s, ~160 MB) se saltea salvo que se pida.
+    if args.skip is not None:
+        skip = args.skip
+    elif args.only or args.with_heart_rate:
+        skip = []
+    else:
+        skip = list(DEFAULT_SKIP)
 
     out_dir = args.out or DATA_DIR
 
@@ -247,7 +266,7 @@ def main():
         print("\n🎉 ¡Todo anda! Para bajar los datos:  python check_and_download.py")
         return
 
-    download(creds, out_dir, args.since, only=args.only, full=args.full)
+    download(creds, out_dir, args.since, only=args.only, full=args.full, skip=skip)
 
 
 if __name__ == "__main__":
